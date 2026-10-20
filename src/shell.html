@@ -1,0 +1,23 @@
+<title>Calc 2 Playground</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Calc 2 practice for 7.1 to 7.4 and 7.8: integration by parts, trig integrals, trig substitution, partial fractions and improper integrals, with a step-list study guide and graded step-by-step practice.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=JetBrains+Mono:wght@400;600&family=Lexend:wght@400;500;600;700&display=swap">
+<style>/*APP_CSS*/</style>
+<style>/*KATEX_CSS*/</style>
+<div id="app"><div style="min-height:60vh;display:grid;place-items:center;font-family:Lexend,system-ui,sans-serif;color:#57506e">Loading the playground…</div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.22/katex.min.js"></script>
+<script>
+/*APP_JS*/
+(function () {
+  function start() { try { UI.boot(); } catch (e) { console.error(e); document.getElementById('app').textContent = 'Something went wrong loading the playground: ' + e.message; } }
+  if (window.katex) start();
+  else {
+    var s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js';
+    s.onload = start; s.onerror = start;
+    document.head.appendChild(s);
+  }
+})();
+</script>

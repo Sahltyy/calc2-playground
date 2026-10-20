@@ -1,0 +1,21 @@
+{
+  "name": "calc2-playground",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Calc 2 practice for 7.1 to 7.4 and 7.8: a step-list study guide, graded practice, boss quizzes and a test simulator.",
+  "scripts": {
+    "build": "node build.js",
+    "build:web": "node build.js --web",
+    "build:all": "node build.js && node build.js --web",
+    "test": "node test/parse.test.js && node test/gen.test.js ibp,trig,tsub,pf 200 && node test/imp.test.js 300 && node test/guide.test.js"
+  },
+  "dependencies": {
+    "katex": "^0.16.22"
+  },
+  "devDependencies": {
+    "@fontsource/caveat": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "@fontsource/lexend": "^5.3.0"
+  },
+  "license": "UNLICENSED"
+}
