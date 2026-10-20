@@ -78,6 +78,8 @@ const reached = new Set(); Object.values(W).forEach((n) => { (n.choices || []).f
 // no math may lose its backslashes: a stray tab, form feed, or "frac" without "\" means a raw-string slip
 const allTex = []; for (const u of units) for (const s of M.GUIDE[u].scenarios) { allTex.push(s.pattern, s.example, ...s.steps.flatMap((x) => x.m || [])); }
 allTex.forEach((t) => { if (/[\t\f\r\v\b]|(^|[^\\a-zA-Z])(frac|sqrt|left|right|cdot|qquad|tfrac|text|sin|cos|tan|sec|ln|arctan)\b/.test(t)) fail('lostBackslash', JSON.stringify(t)); });
-for (const u of units) for (const s of M.GUIDE[u].scenarios) if (![...reached].includes(`S:${u}/${s.key}`)) fail('scenarioNotInWhich', `${u}/${s.key}`);
+for (const u of units) for (const s of M.GUIDE[u].scenarios) if (!s.skill && ![...reached].includes(`S:${u}/${s.key}`)) fail('scenarioNotInWhich', `${u}/${s.key}`);
+// related links point at real scenarios
+for (const u of units) for (const s of M.GUIDE[u].scenarios) (s.see || []).forEach((k) => { if (!M.GUIDE[u].scenarios.some((x) => x.key === k)) fail('seeLink', `${u}/${s.key} -> ${k}`); });
 Object.values(M.WHICH_LEAVES).forEach((l) => richOK(l.text, 'leaf'));
 console.log(`scenarios: ${nSc}  steps: ${nSteps}  tex checks: ${checks}  try-one problems: ${nTry}  fails: ${fails}`);

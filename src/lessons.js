@@ -256,6 +256,16 @@ M.LESSONS = {
       ] },
     },
     {
+      title: 'Solving the system',
+      body: 'Matching coefficients gives you a **system**: one equation per power of $x$. Make a letter cancel by adding or subtracting the equations (**elimination**), or solve one equation for a letter and plug it into the other (**substitution**). If an equation has only ONE letter, solve that one first.',
+      visual: { type: 'moves' },
+      check: { prompt: '$A + B = 4$ and $A - B = 2$. Add the two equations. What is $A$?', options: [
+        { tex: '3', ok: true },
+        { tex: '1', msg: 'That is B. Adding gives $2A = 6$, so $A = 3$.' },
+        { tex: '6', msg: 'Adding gives $2A = 6$. Divide by 2: $A = 3$.' },
+      ] },
+    },
+    {
       title: 'Integrate the pieces',
       body: 'Your class\'s standard forms. Every piece is one of these.',
       visual: { type: 'tex', lines: [
@@ -427,6 +437,9 @@ M.TRAPS = {
   triangle: { name: 'Reading the triangle', patch: 'SOH CAH TOA. Label opp, adj, hyp from your substitution, then read the ratio.', drill: ['tsub', 'x2_root'] },
   'tsub-form': { name: 'Wrong substitution', patch: '$a^2 - x^2 \\to \\sin$, $a^2 + x^2 \\to \\tan$, $x^2 - a^2 \\to \\sec$.', drill: ['tsub', 'asin'] },
   constants: { name: 'Partial fraction constants', patch: 'Plug each root in fully. A goes with the factor whose root you plugged.', drill: ['pf', 'distinct2'] },
+  'sys-elim': { name: 'Sign slip while eliminating', patch: 'When you subtract an equation, flip EVERY term, the number on the right too: $-(A - 3B) = -A + 3B$. Then check both answers in the equation you did not use.', drill: ['pf', 'sys_elim'] },
+  'sys-chain': { name: 'Plugging back in', patch: 'Solve the one-letter equation first, then plug EVERY value you know into the next equation, in parentheses.', drill: ['pf', 'sys_chain'] },
+  'sys-match': { name: 'Matching coefficients', patch: 'Expand, then group: $x^2$ terms with $x^2$, $x$ with $x$, numbers with numbers. A power missing on one side has coefficient 0.', drill: ['pf', 'sys_chain'] },
   'pf-setup': { name: 'Wrong template', patch: 'Repeated factor: one term per power. Irreducible quadratic: linear top $Bx + C$.', drill: ['pf', 'repeated'] },
   'pf-skip': { name: 'ln of the whole bottom', patch: 'Only legal when the top is the derivative of the bottom. Otherwise split first.', drill: ['pf', 'distinct2'] },
   'pf-division': { name: 'Skipped long division', patch: 'Top degree ≥ bottom degree means divide first.', drill: ['pf', 'improper'] },

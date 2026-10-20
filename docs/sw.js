@@ -1,7 +1,7 @@
 /* Calc 2 Playground: keeps a copy of the app on this device so it opens with no connection.
    Pages: try the network first (so you get updates), fall back to the saved copy when offline or slow.
    Everything else (fonts, icons): saved copy first. */
-const CACHE = 'calc2-b81d1f42c566';
+const CACHE = 'calc2-8339b36fbb24';
 const CORE = ['./', './index.html', "./fonts/lexend-latin-ext-400-normal.woff2", "./fonts/lexend-latin-400-normal.woff2", "./fonts/lexend-latin-ext-500-normal.woff2", "./fonts/lexend-latin-500-normal.woff2", "./fonts/lexend-latin-ext-600-normal.woff2", "./fonts/lexend-latin-600-normal.woff2", "./fonts/lexend-latin-ext-700-normal.woff2", "./fonts/lexend-latin-700-normal.woff2", "./fonts/caveat-latin-ext-600-normal.woff2", "./fonts/caveat-latin-600-normal.woff2", "./fonts/caveat-latin-ext-700-normal.woff2", "./fonts/caveat-latin-700-normal.woff2", "./fonts/jetbrains-mono-latin-ext-400-normal.woff2", "./fonts/jetbrains-mono-latin-400-normal.woff2", "./fonts/jetbrains-mono-latin-ext-600-normal.woff2", "./fonts/jetbrains-mono-latin-600-normal.woff2", "./icons/apple-touch-icon.png", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png", "./manifest.webmanifest"];
 
 self.addEventListener('install', (e) => {

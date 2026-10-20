@@ -63,7 +63,7 @@ function renderSection(u) {
     <div class="g-list-h"><h2>${g.scenarios.length} scenarios</h2><span class="muted">Tap one for its step list</span></div>
     <div class="g-tiles">${g.scenarios.map((s, i) => { const sv = solved(u, s); return `<button class="g-tile" data-act="gOpen" data-u="${u}" data-sc="${s.key}">
       <span class="gti-n">${i + 1}</span>
-      <span class="gti-body"><b class="gti-name">${esc(s.name)}</b><span class="gti-pat">${T('\\displaystyle ' + s.pattern)}</span><span class="gti-spot">${R(s.spot)}</span></span>
+      <span class="gti-body">${s.skill ? '<span class="gti-skill">Skill</span>' : ''}<b class="gti-name">${esc(s.name)}</b><span class="gti-pat">${T('\\displaystyle ' + s.pattern)}</span><span class="gti-spot">${R(s.spot)}</span></span>
       <span class="gti-end">${sv.ok ? `<span class="gti-ok" title="Solved ${sv.ok} with full credit from the guide">${I.check}${sv.ok}</span>` : ''}${I.next}</span>
     </button>`; }).join('')}</div>
   </div>`;
@@ -126,7 +126,8 @@ function renderScenario(u, s) {
       <aside class="g-side">
         ${s.visual ? `<section class="card g-vis"><div class="eyebrow">${I.eye} See it</div><div id="gVis"></div></section>` : ''}
         <section class="card g-trap"><span class="trap-x" aria-hidden="true">✗</span><div><div class="eyebrow">The trap</div><p>${R(s.trap)}</p></div></section>
-        ${s.twin ? `<section class="card g-twin"><div class="eyebrow">Same look, different ending</div><div class="g-twin-m">${T(s.twin.tex, true)}</div><p class="muted">${R(s.twin.note)}</p></section>` : ''}
+        ${(s.see || []).map((k) => { const t = scOf(u, k); return t ? `<button class="g-see" data-act="gOpen" data-u="${u}" data-sc="${k}"><span><span class="eyebrow">Stuck on this part?</span><b>${esc(t.name)}</b></span>${I.next}</button>` : ''; }).join('')}
+        ${s.twin ? `<section class="card g-twin"><div class="eyebrow">${esc(s.twin.title || 'Same look, different ending')}</div><div class="g-twin-m">${T(s.twin.tex, true)}</div><p class="muted">${R(s.twin.note)}</p></section>` : ''}
         <section class="card g-try">
           <div><div class="eyebrow">Your turn</div><h3>Try one like this</h3><p class="muted">A fresh problem of this exact type. Every step gets checked, with coaching.${locked ? ` (${un.sec} is still locked on the map, but this works anyway.)` : ''}</p></div>
           <button class="btn accent xl" data-act="gTry" data-u="${u}" data-sc="${s.key}">Try one ${I.play}</button>

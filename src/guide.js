@@ -346,6 +346,7 @@ M.GUIDE = {
         trap: X`A root at $x = 3$ means the factor $(x - 3)$. Plug in the ROOT. And keep the absolute value bars.`,
         visual: { type: 'coverup', num: '5x-3', f1: '(x-3)', f2: '(x+1)', aLine: X`x = 3:\quad A = \frac{5(3)-3}{(3)+1} = \frac{12}{4} = 3`, bLine: X`x = -1:\quad B = \frac{5(-1)-3}{(-1)-3} = \frac{-8}{-4} = 2` },
         verify: { f: (x) => (5 * x - 3) / ((x - 3) * (x + 1)), F: (x) => 3 * Math.log(Math.abs(x - 3)) + 2 * Math.log(Math.abs(x + 1)), dom: [3.5, 6] },
+        see: ['system'],
       },
       {
         key: 'repeated', name: 'Case 2: a repeated linear factor', spot: X`A linear factor that is squared (or cubed), like $(x - 1)^2$. (Class Example 3)`,
@@ -360,6 +361,7 @@ M.GUIDE = {
         ],
         trap: X`The squared piece is NOT a log. Power rule: $\frac{2}{(x-1)^2} \to -\frac{2}{x - 1}$.`,
         verify: { f: (x) => (x * x + 1) / (x * (x - 1) ** 2), F: (x) => Math.log(Math.abs(x)) - 2 / (x - 1), dom: [1.5, 4] },
+        see: ['system'],
       },
       {
         key: 'irreducible', name: 'Case 3: a quadratic that won\'t factor', spot: X`A quadratic like $x^2 + 4$ that never hits 0 ($b^2 - 4ac < 0$). (Class Example 4)`,
@@ -374,6 +376,7 @@ M.GUIDE = {
         ],
         trap: X`$x^2 + 4$ does NOT factor (that is $x^2 - 4$). And the top over a quadratic is $Bx + C$, not just $B$.`,
         verify: { f: (x) => (2 * x * x - x + 4) / (x * (x * x + 4)), F: (x) => Math.log(Math.abs(x)) + 0.5 * Math.log(x * x + 4) - 0.5 * Math.atan(x / 2), dom: [0.5, 3] },
+        see: ['system'],
       },
       {
         key: 'rep_quad', name: 'Case 4: that quadratic, squared', spot: X`An irreducible quadratic that repeats, like $(x^2 + 1)^2$. (Class Example 5)`,
@@ -388,6 +391,24 @@ M.GUIDE = {
         ],
         trap: X`The squared piece is a u-sub with $u = x^2 + 1$, NOT a log.`,
         verify: { f: (x) => (x ** 4 + 1) / (x * (x * x + 1) ** 2), F: (x) => Math.log(Math.abs(x)) + 1 / (x * x + 1), dom: [0.5, 3] },
+        see: ['system'],
+      },
+      {
+        key: 'system', skill: true, name: 'Solve the system (match coefficients)', spot: X`No root gives you the constants, or the problem says "match coefficients." You get one equation per power of $x$.`,
+        pattern: X`\left\{\begin{aligned} ${pk(X`A`)} + ${lv(X`B`)} &= 5 \\ ${pk(X`A`)} - 3${lv(X`B`)} &= -3 \end{aligned}\right.`, families: ['sys_elim', 'sys_chain'],
+        example: X`\int \frac{5x - 3}{(x - 3)(x + 1)}\,dx`,
+        steps: [
+          { t: 'Basic equation', d: 'Template, then multiply both sides by the whole bottom. (Same start as Class Example 2.)', m: [X`\frac{5x - 3}{(x-3)(x+1)} = \frac{${pk(X`A`)}}{x - 3} + \frac{${lv(X`B`)}}{x + 1}`, X`5x - 3 = ${pk(X`A`)}(x + 1) + ${lv(X`B`)}(x - 3)`] },
+          { t: 'Expand and group by powers of x', d: X`Multiply out, then put the $x$ terms together and the plain numbers together.`, m: [X`= ${pk(X`A`)}x + ${pk(X`A`)} + ${lv(X`B`)}x - 3${lv(X`B`)}`, X`= (${pk(X`A`)} + ${lv(X`B`)})x + (${pk(X`A`)} - 3${lv(X`B`)})`] },
+          { t: 'Match coefficients: one equation per power', d: X`The $x$ numbers match, and the plain numbers match.`, m: [X`x:\; ${pk(X`A`)} + ${lv(X`B`)} = 5 \qquad \text{numbers:}\; ${pk(X`A`)} - 3${lv(X`B`)} = -3`] },
+          { t: 'Eliminate a letter', g: 'Add or subtract so one letter cancels', d: X`Both equations have one $A$, so subtract the second from the first. Subtract EVERY term, numbers too.`, m: [X`(${pk(X`A`)} + ${lv(X`B`)}) - (${pk(X`A`)} - 3${lv(X`B`)}) = 5 - (-3)`, X`\cancel{${pk(X`A`)}} + ${lv(X`B`)} - \cancel{${pk(X`A`)}} + 3${lv(X`B`)} = 8 \;\Rightarrow\; 4${lv(X`B`)} = 8 \;\Rightarrow\; ${lv(X`B = 2`)}`] },
+          { t: 'Plug it back in', g: 'Plug the value back in for the other letter', d: 'Put B into the easier equation, fully plugged in.', m: [X`${pk(X`A`)} + (2) = 5 \;\Rightarrow\; ${pk(X`A = 3`)}`] },
+          { t: 'Check, then integrate + C', d: 'Plug both values into the equation you did not use. Then integrate like Case 1.', m: [X`\text{Check: } (3) - 3(2) = -3 \;\checkmark`, X`\int\left(\frac{3}{x - 3} + \frac{2}{x + 1}\right)dx = 3\ln|x - 3| + 2\ln|x + 1| + C`] },
+        ],
+        twin: { title: 'Or by substitution', tex: X`\begin{aligned} A &= 5 - B \\ (5 - B) - 3B &= -3 \\ 5 - 4B &= -3 \\ -4B &= -8 \;\Rightarrow\; B = 2 \\ A &= 5 - (2) = 3 \end{aligned}`, note: 'Solve one equation for a letter, plug it into the other. Same answer. Got an equation with only ONE letter (like $4A = 4$)? Solve that first, then plug down the chain.' },
+        trap: X`When you subtract an equation, flip the sign of EVERY term: $-(A - 3B) = -A + 3B$, and $5 - (-3) = 8$.`,
+        visual: { type: 'moves' },
+        verify: { f: (x) => (5 * x - 3) / ((x - 3) * (x + 1)), F: (x) => 3 * Math.log(Math.abs(x - 3)) + 2 * Math.log(Math.abs(x + 1)), dom: [3.5, 6] },
       },
     ],
   },

@@ -26,7 +26,8 @@ M.mistake = (s, tag, msg, step) => ({ tex: s.tex, f: s.f, tag, msg, step });
 
 /** Step builders */
 M.st = {
-  choice: (prompt, options, points = 1) => ({ kind: 'choice', prompt, options, points }),
+  // two choices that read the same would make one of them a trick: keep one (the right one, if either is)
+  choice: (prompt, options, points = 1) => ({ kind: 'choice', prompt, options: options.filter((o, i) => { const k = o.tex || o.text; return !options.some((q, j) => j !== i && (q.tex || q.text) === k && (q.ok && !o.ok || (!!q.ok === !!o.ok && j < i))); }), points }),
   expr: (promptTex, o) => ({ kind: 'expr', promptTex, points: 2, vars: ['x'], exact: false, ...o }),
   num: (promptTex, value, o = {}) => ({ kind: 'num', promptTex, expect: value, points: 2, ...o }),
   final: (points = 3) => ({ kind: 'final', points }),

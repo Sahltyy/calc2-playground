@@ -355,6 +355,45 @@ VIS.longdiv = () => {
   };
 };
 
+/* ---------- solving a system, one move at a time (class Example 2 done by elimination) ---------- */
+VIS.moves = (v = {}) => {
+  const A = '\\htmlClass{hu}{A}', B = '\\htmlClass{hv}{B}';
+  const lines = v.lines || [
+    `\\begin{aligned} ${A} + ${B} &= 5 \\\\ ${A} - 3${B} &= -3 \\end{aligned}`,
+    `(${A} + ${B}) - (${A} - 3${B}) = 5 - (-3)`,
+    `\\cancel{${A}} + ${B} - \\cancel{${A}} + 3${B} = 8`,
+    `4${B} = 8 \\;\\Rightarrow\\; \\htmlClass{hv}{B = 2}`,
+    `${A} + (2) = 5 \\;\\Rightarrow\\; \\htmlClass{hu}{A = 3}`,
+    `\\text{Check: } (3) - 3(2) = -3 \\;\\checkmark`,
+  ];
+  const say = v.say || [
+    'The system from matching coefficients. Both equations have exactly one $A$.',
+    'Subtract the second equation from the first. Every term in it flips sign, the $-3$ too.',
+    'The $A$\'s cancel. That is the whole point of eliminating.',
+    'Only $B$ is left. Divide by 4.',
+    'Plug $B = 2$ back into the easier equation to get $A$.',
+    'Check both values in the equation you did not use. It works, so $A = 3$ and $B = 2$.',
+  ];
+  const last = lines.length - 1;
+  return {
+    html: `<div class="viz moves"><div class="mv-lines">${lines.map((l, i) => `<div class="mv-line" data-i="${i}">${T(l, true)}</div>`).join('')}</div>
+      <div class="ld-say" aria-live="polite"></div>
+      <div class="controls"><button class="btn sm accent" data-l="next">Next move ${I.next}</button><button class="btn sm ghost" data-l="reset">${I.reset} Start over</button></div></div>`,
+    mount(el) {
+      let k = 0;
+      const rows = [...el.querySelectorAll('.mv-line')], sayEl = el.querySelector('.ld-say'), nb = el.querySelector('[data-l="next"]');
+      const paint = () => {
+        rows.forEach((row, i) => { row.classList.toggle('on', i <= k); row.classList.toggle('cur', i === k); });
+        sayEl.innerHTML = `<span class="ld-n">${k + 1}</span><span>${R(say[k])}</span>`;
+        nb.disabled = k >= last; nb.innerHTML = k >= last ? 'Done' : `Next move ${I.next}`;
+      };
+      nb.onclick = () => { if (k < last) { k++; UI.Sound.play(k >= last ? 'good' : 'tick'); paint(); } };
+      el.querySelector('[data-l="reset"]').onclick = () => { k = 0; paint(); };
+      paint();
+    },
+  };
+};
+
 /* ---------- a section's step recipe as a track you can tap ---------- */
 VIS.recipe = (v) => {
   const g = M.GUIDE && M.GUIDE[v.unit]; if (!g) return { html: '' };

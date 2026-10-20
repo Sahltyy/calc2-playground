@@ -106,7 +106,7 @@ with sync_playwright() as p:
             if (u, k) in [('pf', 'distinct'), ('imp', 'inside_asym'), ('ibp', 'tabular')]:
                 page.screenshot(path=f'{SHOTS}/g03-sc-{u}-{k}.png', full_page=True)
     print('scenarios visited', total_sc)
-    check(total_sc == 28, 'scenario count 28')
+    check(total_sc == 29, 'scenario count 29')
 
     step('cover the math, tap a hidden step')
     page.evaluate("() => UI.go({ name: 'guide', unit: 'pf', sc: 'distinct' })"); page.wait_for_timeout(200)
@@ -158,6 +158,50 @@ with sync_playwright() as p:
     # leaving via the map clears the guide problem
     page.click('[data-act="home"]') if page.query_selector('.backlink[data-act="home"]') else None
     page.evaluate("() => UI.go({ name: 'home' })"); page.wait_for_timeout(200)
+
+    step('solve-the-system page: elimination moves, related link, try one with typed constants')
+    page.evaluate("() => UI.go({ name: 'guide', unit: 'pf', sc: 'distinct' })"); page.wait_for_timeout(250)
+    check(page.query_selector('.g-see[data-sc="system"]') is not None, 'Case 1 links to the system page')
+    page.click('.g-see[data-sc="system"]'); page.wait_for_timeout(300)
+    check(page.evaluate("() => UI.app.route.sc") == 'system', 'opened the system page')
+    check(len(page.query_selector_all('#gVis .mv-line.on')) == 1, 'moves: first line only')
+    for i in range(5):
+        page.click('#gVis [data-l="next"]'); page.wait_for_timeout(60)
+    check(len(page.query_selector_all('#gVis .mv-line.on')) == 6 and page.query_selector('#gVis [data-l="next"][disabled]') is not None, 'moves: all six lines, then Done')
+    check('substitution' in page.inner_text('.g-twin').lower(), 'twin card shows the substitution way')
+    page.screenshot(path=f'{SHOTS}/g10-system.png', full_page=True)
+    for trial in range(2):
+        page.click('[data-act="gTry"]'); page.wait_for_timeout(400)
+        fam = page.evaluate("() => UI.app.P.p.family")
+        check(fam in ('sys_elim', 'sys_chain'), f'try one gives a system problem ({fam})')
+        typed_ok = 0
+        for k in range(40):
+            info = page.evaluate("""() => { const P = UI.app.P; if (!P || P.done) return null; const s = P.p.steps[P.cur]; return { cur: P.cur, kind: s.check ? s.check.kind : null, status: P.steps[P.cur].status, expect: s.check && s.check.kind === 'num' ? s.check.expect : null }; }""")
+            if not info: break
+            if info['status'] != 'current':
+                nb = page.query_selector('[data-act="stepNext"]')
+                if nb: nb.click(); page.wait_for_timeout(120); continue
+                break
+            if info['kind'] == 'choice':
+                idx = page.evaluate("() => { const P=UI.app.P; return P.p.steps[P.cur].check.options.findIndex(o=>o.ok); }")
+                page.click(f'#step{info["cur"]} .opt[data-k="{idx}"]')
+            elif info['kind'] == 'num':
+                page.fill(f'#mf{info["cur"]}-in', str(info['expect'])); page.click(f'[data-act="checkStep"][data-i="{info["cur"]}"]')
+                page.wait_for_timeout(150)
+                if page.evaluate(f"() => UI.app.P.steps[{info['cur']}].status") == 'ok': typed_ok += 1
+            else:
+                page.click(f'[data-act="showStep"][data-i="{info["cur"]}"]')
+            page.wait_for_timeout(150)
+        need = 2 if fam == 'sys_elim' else 3
+        check(typed_ok == need, f'typed constants graded right ({typed_ok}/{need})')
+        if trial == 0: page.screenshot(path=f'{SHOTS}/g11-system-try.png', full_page=True)
+        page.click('#resultBox [data-act="gReturn"]'); page.wait_for_timeout(300)
+    # the lesson card
+    page.evaluate("() => { const i = M.LESSONS.pf.findIndex((c) => c.title === 'Solving the system'); UI.app.L.pf = i; UI.go({ name: 'unit', unit: 'pf', tab: 'learn', peek: true }); }"); page.wait_for_timeout(300)
+    check('Solving the system' in page.inner_text('.lesson-card h2'), 'lesson card: Solving the system')
+    page.click('#lc .opt[data-k="0"]'); page.wait_for_timeout(100)
+    check(page.query_selector('#lcf .feedback.good') is not None, 'lesson check: A = 3')
+    page.evaluate("() => UI.go({ name: 'home' })"); page.wait_for_timeout(250)
 
     step('which method flow')
     page.click('.guide-card [data-act="whichStart"]'); page.wait_for_timeout(250)

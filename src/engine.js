@@ -822,6 +822,7 @@ function sp(toks) {
       push(lo ? `the limit as ${lo} of` : 'the limit of', false); continue;
     }
     if (t === '\\htmlClass' || t === '\\color' || t === '\\textcolor' || t === '\\class') { const [, j] = readGroup(toks, i); i = j; continue; }
+    if (t === '\\cancel' || t === '\\bcancel' || t === '\\xcancel') { const [a, j] = readGroup(toks, i); i = j; push(`cancel ${sp(a)},`, true); continue; }
     if (t === '\\boxed' || t === '\\mathrm' || t === '\\mathbf' || t === '\\boldsymbol' || t === '\\underline') continue;
     if (t === '\\underbrace' || t === '\\overbrace') {
       const [a, j] = readGroup(toks, i); i = j;

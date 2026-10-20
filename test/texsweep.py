@@ -9,7 +9,7 @@ with sync_playwright() as p:
     page.route('**/katex.min.js', lambda r: r.fulfill(status=200, content_type='application/javascript', body=katex))
     page.route('https://fonts.googleapis.com/**', lambda r: r.fulfill(status=200, content_type='text/css', body=''))
     page.goto(('file://' + os.path.abspath('dist/test.html'))); page.wait_for_timeout(500)
-    page.evaluate("""() => { window.__texErr = []; const orig = katex.renderToString; katex.renderToString = (s, o) => { try { orig(s, Object.assign({}, o, {throwOnError: true})); } catch (e) { window.__texErr.push(String(s).slice(0,120) + ' :: ' + e.message.slice(0,100)); } return orig(s, o); }; UI.Store.state.settings.unlockAll = true; }""")
+    page.evaluate("""() => { window.__texErr = []; const orig = katex.renderToString; katex.renderToString = (s, o) => { try { orig(s, Object.assign({}, o, {throwOnError: true})); } catch (e) { window.__texErr.push(String(s).slice(0,120) + ' :: ' + e.message.slice(0,100)); } if (/(^|[^\\\\]);/.test(String(s))) window.__texErr.push('lost backslash before ; :: ' + String(s).slice(0,120)); return orig(s, o); }; UI.Store.state.settings.unlockAll = true; }""")
     for u in ['ibp','trig','tsub','pf','imp']:
         n = page.evaluate(f"() => M.LESSONS['{u}'].length")
         for i in range(n):

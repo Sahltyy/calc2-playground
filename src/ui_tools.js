@@ -145,6 +145,7 @@ const SHEET = {
     ['Case 1 and 2: linear', '(x-a): \\tfrac{A}{x-a} \\qquad (x-a)^{2}: \\tfrac{A}{x-a} + \\tfrac{B}{(x-a)^{2}}'],
     ['Case 3 and 4: quadratic', 'x^{2}+k^{2}: \\tfrac{Bx+C}{x^{2}+k^{2}} \\qquad (x^{2}+k^{2})^{2}: \\tfrac{Bx+C}{x^{2}+k^{2}} + \\tfrac{Dx+E}{(x^{2}+k^{2})^{2}}'],
     ['Find constants', '\\text{Heaviside: plug in each root} \\quad \\text{then match coefficients of } x^{2}, x, 1'],
+    ['Solve the system', '\\text{Eliminate: add or subtract so a letter cancels} \\quad \\text{Substitute: solve one, plug it in} \\quad \\text{One-letter equation first}'],
     ['Standard forms', '\\int\\frac{dx}{ax+b} = \\frac{1}{a}\\ln|ax+b| \\qquad \\int\\frac{dx}{(ax+b)^{n}} = \\frac{(ax+b)^{-n+1}}{a(-n+1)}'],
     ['', '\\int\\frac{dx}{x^{2}+a^{2}} = \\frac{1}{a}\\arctan\\frac{x}{a} \\qquad \\int\\frac{2x\\,dx}{x^{2}+a^{2}} = \\ln(x^{2}+a^{2})'],
   ],

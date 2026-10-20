@@ -1053,3 +1053,17 @@ button.gstep-h:hover .gs-show span { text-decoration: underline; }
 .sl-trap { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--bad-bg); font-size: 14px; align-items: start; }
 .sl-trap .trap-x { font-size: 26px; }
 .sl-btns .btn { flex: 1 1 auto; }
+
+/* solving a system: one move at a time */
+.mv-lines { display: flex; flex-direction: column; gap: 2px; overflow-x: auto; }
+.mv-line { opacity: 0; transition: opacity 0.3s; border-radius: 10px; padding: 0 8px; }
+.mv-line.on { opacity: 1; }
+.mv-line.cur { background: var(--u-hl); }
+.mv-line .katex-display { margin: 0.2em 0; }
+/* study guide: skill pages and the links to them */
+.gti-skill { align-self: flex-start; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--u); background: var(--u-hl); border-radius: 99px; padding: 2px 9px; }
+.g-see { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-radius: 18px; border: 2px dashed var(--u); background: var(--card); color: var(--ink); text-align: left; cursor: pointer; font-size: 15.5px; }
+.g-see:hover { background: var(--u-hl); }
+.g-see > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.g-see .eyebrow { color: var(--u); }
+.g-see svg { width: 18px; height: 18px; color: var(--ink-3); flex: none; }

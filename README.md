@@ -2,7 +2,7 @@
 
 Practice for Calc 2, sections 7.1 to 7.4 and 7.8: integration by parts, trig integrals, trig substitution, partial fractions, and improper integrals.
 
-- **Study guide:** a step list for every scenario (28 of them), each with how to spot it, the steps on a worked example, a picture, the trap, and a practice problem. Plus a **Which method?** yes/no helper.
+- **Study guide:** a step list for every scenario (29 of them, including how to solve the system of equations you get when matching coefficients), each with how to spot it, the steps on a worked example, a picture, the trap, and a practice problem. Plus a **Which method?** yes/no helper.
 - **Practice** graded like a professor would: step by step, the whole answer at once, or quiz sets graded at the end.
 - **Boss Quizzes**, a **Test Simulator** (12 questions, 30-minute timer you can pause), calculator, graph, scratchpad, unit circle, read-aloud, and a focus timer.
 

@@ -388,12 +388,144 @@ function rep_quad(level, r, fx = {}) {
   };
 }
 
-const FAM = { distinct2, distinct3, repeated, irreducible, improper, split, divide_lin, rep_quad };
+/* ==========================================================================
+   Solving the system: match coefficients, get one equation per power of x,
+   then solve it by elimination (sys_elim) or as a chain (sys_chain).
+   ========================================================================== */
+/** a linear combination like A - 3B + 2C (zeros skipped) */
+const lc = (terms) => {
+  let out = '';
+  terms.forEach(([c, v]) => {
+    if (!c) return;
+    const a = Math.abs(c), body = (a === 1 ? '' : a) + v;
+    out += out ? (c < 0 ? ' - ' : ' + ') + body : (c < 0 ? '-' : '') + body;
+  });
+  return out || '0';
+};
+/** coefficient times a known value, fully plugged in: "-4(3)" */
+const plug = (c, v, first) => {
+  const a = Math.abs(c), body = `${a === 1 ? '' : a}(${v})`;
+  return first ? (c < 0 ? '-' : '') + body : (c < 0 ? ' - ' : ' + ') + body;
+};
+const sysTex = (rows) => `\\begin{aligned} ${rows.map(([l, rhs]) => `${l} &= ${rhs}`).join(' \\\\ ')} \\end{aligned}`;
+
+/* ---------- 2 unknowns: elimination ---------- */
+function sys_elim(level, r, fx = {}) {
+  let r1, r2;
+  if (fx.r1 != null) { r1 = fx.r1; r2 = fx.r2; }
+  else if (level === 1 || r.chance(0.4)) {
+    // one factor is (x ± 1), so one add or subtract cancels A
+    r2 = r.pick([-1, 1]);
+    do { r1 = r.pick([-4, -3, -2, 2, 3, 4]); } while (r1 === -r2);
+  } else {
+    // needs a multiply first
+    const R = [-4, -3, -2, 2, 3, 4];
+    r1 = r.pick(R); do { r2 = r.pick(R); } while (r2 === r1 || r2 === -r1);
+  }
+  const AB = [-4, -3, -2, -1, 1, 2, 3, 4, 5];
+  let A = fx.A, B = fx.B;
+  // (the two right-hand numbers must differ, or matching them up would be a coin flip)
+  if (A == null) { let t = 0; do { A = r.pick(AB); B = r.pick(AB); t++; } while ((A === B || A + B === 0 || -r2 * A - r1 * B === 0 || -r2 * A - r1 * B === A + B) && t < 50); }
+  // N = A(x − r2) + B(x − r1) = (A + B)x + (−r2·A − r1·B)
+  const p1 = A + B, p0 = -r2 * A - r1 * B;
+  if (A === B || p1 === 0 || p0 === 0 || p0 === p1) return null;
+  const N = [p1, p0];
+  const Np = M.poly(N), Dp = M.poly([1, -(r1 + r2), r1 * r2]);
+  const cA = -r2, cB = -r1; // the plain-number equation: cA·A + cB·B = p0
+  const eq2 = lc([[cA, 'A'], [cB, 'B']]);
+  const fac = `${facTex(r1)}${facTex(r2)}`;
+  const tmpl = `\\frac{A}{${linTex(r1)}} + \\frac{B}{${linTex(r2)}}`;
+  const ans = S([T(A, [lnLin(r1)]), T(B, [lnLin(r2)])]);
+  const { domain, absDomain } = rootsDomain([r1, r2]);
+  const system = sysTex([['A + B', p1], [eq2, p0]]);
+  // eliminate A: (second) + r2·(first)  →  (r2 − r1)B = p0 + r2·p1
+  let elimThink, elimLines;
+  if (r2 === -1) {
+    elimThink = 'Both equations start with $A$. Subtract the second one from the first: the $A$\'s cancel. Subtract EVERY term, numbers too.';
+    elimLines = [`(A + B) - (${eq2}) = ${p1} - (${p0})`, `${lc([[1 + r1, 'B']])} = ${p1 - p0} \\;\\Rightarrow\\; B = ${B}`];
+  } else if (r2 === 1) {
+    elimThink = 'One equation has $+A$ and the other has $-A$. Add them: the $A$\'s cancel.';
+    elimLines = [`(A + B) + (${eq2}) = ${p1} + (${p0})`, `${lc([[1 - r1, 'B']])} = ${p1 + p0} \\;\\Rightarrow\\; B = ${B}`];
+  } else {
+    elimThink = `The $A$'s do not match yet. Multiply the first equation by $${r2}$ so it has $${r2}A$, then add the second one: $${r2}A$ and $${-r2}A$ cancel.`;
+    elimLines = [`\\text{First} \\times (${r2}):\\; ${lc([[r2, 'A'], [r2, 'B']])} = ${r2 * p1}`, `(${lc([[r2, 'A'], [r2, 'B']])}) + (${eq2}) = ${r2 * p1} + (${p0})`, `${lc([[r2 - r1, 'B']])} = ${r2 * p1 + p0} \\;\\Rightarrow\\; B = ${B}`];
+  }
+  // the classic slip: the right-hand number keeps the wrong sign while eliminating
+  const Bs = Q(r2 * p1 - p0, r2 - r1), As = Q.sub(Q(p1), Bs);
+  const mistakes = [
+    mk(S([T(As, [lnLin(r1)]), T(Bs, [lnLin(r2)])]), 'sys-elim', 'Sign slip while eliminating: the number on the right side changes too. Check both answers in the equation you did not use.', 3),
+    mk(S([T(B, [lnLin(r1)]), T(A, [lnLin(r2)])]), 'constants', `A and B got swapped. A sits over $${linTex(r1)}$, so in the basic equation it multiplies the OTHER factor, $${facTex(r2)}$.`, 0),
+    mk(S([T(p1, [lnLin(r1)]), T(B, [lnLin(r2)])]), 'sys-chain', `Plug B back in: $A + (${B}) = ${p1}$, so $A = ${A}$.`, 4),
+    mk(S([T(A, [lnLin(r1)]), T(-B, [lnLin(r2)])]), 'sign', 'Sign slip on B.', 3),
+    mk(S([T(1, [pc.Ln(Dp)])]), 'pf-skip', 'You cannot $\\ln$ the whole bottom unless the top is exactly its derivative. Split it first.', 0),
+  ];
+  return {
+    family: 'sys_elim', famLabel: 'solve the system', level: r2 === 1 || r2 === -1 ? 1 : 2,
+    tex: `\\int \\frac{${Np.tex}}{${fac}}\\,dx`, f: (x) => polyVal(N, x) / ((x - r1) * (x - r2)), domain, absDomain, answer: ans, mistakes,
+    hints: [`One fraction per factor: $${tmpl}$. Multiply by the whole bottom.`, `Expand and match: $A + B = ${p1}$ and $${eq2} = ${p0}$.`, r2 === -1 ? 'Subtract the equations to cancel A.' : r2 === 1 ? 'Add the equations to cancel A.' : `Multiply the first equation by ${r2}, then add.`],
+    steps: [
+      { title: 'Set up the template', think: 'Two different linear factors: one fraction each, a constant on top. Multiply both sides by the whole bottom to get the basic equation.', lines: [`\\frac{${Np.tex}}{${fac}} = ${tmpl}`, `${Np.tex} = A${facTex(r2)} + B${facTex(r1)}`], check: st.choice('Which setup?', [{ tex: tmpl, ok: true }, { tex: `\\frac{Ax + B}{${fac}}`, msg: 'That is the fraction you started with. Split it: one fraction per factor.' }, { tex: `\\frac{A}{${linTex(r1)}} + \\frac{B}{(${linTex(r1)})^{2}}`, msg: 'The factors are different, so each one gets its own fraction.' }], 2), tag: 'pf-setup' },
+      { title: 'Expand and group by powers of x', think: 'Multiply out each piece, then collect the $x$ terms together and the plain numbers together.', lines: [`A${facTex(r2)} + B${facTex(r1)} = ${lc([[1, 'Ax'], [-r2, 'A'], [1, 'Bx'], [-r1, 'B']])}`, `= (A + B)x + (${eq2})`], check: st.choice('Grouped, it is:', [{ tex: `(A + B)x + (${eq2})`, ok: true }, { tex: `(A + B)x + (${lc([[r2, 'A'], [r1, 'B']])})`, msg: 'Watch the signs: $A(x - r)$ gives $Ax - rA$.' }, { tex: `(A + B)x + (${lc([[-r1, 'A'], [-r2, 'B']])})`, msg: `Each constant multiplies the OTHER factor: $A$ goes with $${facTex(r2)}$.` }], 2), tag: 'sys-match' },
+      { title: 'Match coefficients: the system', think: 'Same power, same number on both sides: the $x$ coefficients match, and the plain numbers match. That gives one equation per power.', lines: [`${Np.tex} = (A + B)x + (${eq2})`, system], check: st.choice('So the system is:', [{ tex: system, ok: true }, { tex: sysTex([['A + B', p0], [eq2, p1]]), msg: 'Match like with like: the $x$ coefficient goes with $(A + B)$, the plain number with the other group.' }, { tex: sysTex([['A + B', p1], [eq2, -p0]]), msg: `Keep the sign of the plain number: it is $${p0}$.` }], 2), tag: 'sys-match' },
+      { title: 'Eliminate A to get B', think: elimThink, lines: elimLines, check: st.num('B =', B, { points: 2, answerTex: `${B}` }), tag: 'sys-elim' },
+      { title: 'Plug B back in to get A', think: 'Put the B you found into the easier equation, fully plugged in.', lines: [`A + (${B}) = ${p1} \\;\\Rightarrow\\; A = ${A}`, `\\text{Check: } ${plug(cA, A, true)}${plug(cB, B, false)} = ${p0} \\;\\checkmark`], check: st.num('A =', A, { points: 1, answerTex: `${A}` }), tag: 'sys-chain' },
+      { title: 'Integrate each piece + C', think: '$\\int\\frac{A}{x - r}dx = A\\ln|x - r|$. Keep the absolute values.', lines: [`\\int \\left(\\frac{${A}}{${linTex(r1)}} + \\frac{${B}}{${linTex(r2)}}\\right)dx = ${ans.tex} + C`], check: st.final(3), tag: 'abs' },
+    ],
+  };
+}
+
+/* ---------- 3 unknowns: a chain (start with the one-letter equation) ---------- */
+function sys_chain(level, r, fx = {}) {
+  const a = fx.a ?? r.pick([1, 2, -1, -2, 1, 3]);
+  const A = fx.A ?? r.pick([1, 2, -1, 3, -2]);
+  const B = fx.B ?? r.pick([1, -1, 2, -2, 3]);
+  const C = fx.C ?? r.pick([1, 2, 3, -1, -2, 4]);
+  // N = A(x − a)² + Bx(x − a) + Cx = (A + B)x² + (−2aA − aB + C)x + a²A
+  const n2 = A + B, n1 = -2 * a * A - a * B + C, n0 = a * a * A;
+  if (n2 === 0) return null;
+  const N = trim([n2, n1, n0]);
+  const Np = M.poly(N), lin = linTex(a), a2 = a * a;
+  const eq1 = lc([[-2 * a, 'A'], [-a, 'B'], [1, 'C']]);
+  const eq0 = lc([[a2, 'A']]);
+  const tmpl = `\\frac{A}{x} + \\frac{B}{${lin}} + \\frac{C}{(${lin})^{2}}`;
+  const cPiece = C < 0 ? T(1, [fracPiece(-C, a)]) : T(-1, [fracPiece(C, a)]);
+  const cWrong = C < 0 ? T(-1, [fracPiece(-C, a)]) : T(1, [fracPiece(C, a)]);
+  const ans = S([T(A, [lnLin(0)]), T(B, [lnLin(a)]), cPiece]);
+  const { domain, absDomain } = rootsDomain([0, a]);
+  const grouped = `(A + B)x^{2} + (${eq1})x + ${eq0}`;
+  const system = sysTex([['A + B', n2], [eq1, n1], [eq0, n0]]);
+  const lnC = (c) => (c < 0 ? T(1, [fracPiece(-c, a)]) : T(-1, [fracPiece(c, a)]));
+  const Cskip = C - 2 * a * A; // forgot the −2aA term
+  const mistakes = [
+    B + C !== 0 ? mk(S([T(A, [lnLin(0)]), T(B + C, [lnLin(a)])]), 'power', '$\\frac{C}{(x-a)^2}$ is not a log. Power rule: $\\int C(x-a)^{-2}dx = -\\frac{C}{x - a}$.', 6) : null,
+    mk(S([T(A, [lnLin(0)]), T(B, [lnLin(a)]), cWrong]), 'sign', '$\\int (x-a)^{-2}dx = -(x-a)^{-1}$: there is a minus.', 6),
+    Cskip !== C && Cskip !== 0 ? mk(S([T(A, [lnLin(0)]), T(B, [lnLin(a)]), lnC(Cskip)]), 'sys-chain', `In the $x$ equation, plug in BOTH values you know: $${plug(-2 * a, A, true)}${plug(-a, B, false)} + C = ${n1}$.`, 5) : null,
+    Math.abs(a) !== 1 ? (() => { const A2 = a * A, B2 = n2 - A2, C2 = n1 + 2 * a * A2 + a * B2; return C2 !== 0 ? mk(S([T(A2, [lnLin(0)]), T(B2, [lnLin(a)]), lnC(C2)]), 'sys-chain', `The number equation is $${a2}A = ${n0}$: divide by $${a2}$.`, 3) : null; })() : null,
+    mk(S([T(A, [lnLin(0)]), T(B, [lnLin(a)])]), 'pf-setup', 'A repeated factor gets one fraction for EACH power, so there is a $\\frac{C}{(x-a)^2}$ piece too.', 0),
+  ];
+  const fill = (c, v, first) => plug(c, v, first);
+  return {
+    family: 'sys_chain', famLabel: 'solve the system (chain)', level: 2,
+    tex: `\\int \\frac{${Np.tex}}{x(${lin})^{2}}\\,dx`, f: (x) => polyVal(N, x) / (x * (x - a) ** 2), domain, absDomain, answer: ans, mistakes,
+    hints: [`Template: $${tmpl}$.`, 'Expand, group by powers of $x$, and match. One equation will have only $A$.', 'Solve the one-letter equation first, then plug in down the chain.'],
+    steps: [
+      { title: 'Set up the template', think: 'A plain $x$, plus a squared linear factor: one fraction for $x$, and one for EACH power of the repeated factor.', lines: [`\\frac{${Np.tex}}{x(${lin})^{2}} = ${tmpl}`, `${Np.tex} = A(${lin})^{2} + Bx(${lin}) + Cx`], check: st.choice('Which setup?', [{ tex: tmpl, ok: true }, { tex: `\\frac{A}{x} + \\frac{B}{(${lin})^{2}}`, msg: 'A repeated factor needs a fraction for EACH power: $(x-a)$ and $(x-a)^2$.' }, { tex: `\\frac{A}{x} + \\frac{Bx + C}{(${lin})^{2}}`, msg: 'Linear factors get constant tops. It is the power that repeats, so split it into two fractions.' }], 2), tag: 'pf-setup' },
+      { title: 'Expand and group by powers of x', think: `$(${lin})^2 = x^2 ${-2 * a < 0 ? '-' : '+'} ${Math.abs(2 * a)}x + ${a2}$. Multiply out each piece, then collect $x^2$ terms, $x$ terms, and plain numbers.`, lines: [`A(${lin})^{2} + Bx(${lin}) + Cx`, `= ${lc([[1, 'Ax^{2}'], [-2 * a, 'Ax'], [a2, 'A'], [1, 'Bx^{2}'], [-a, 'Bx'], [1, 'Cx']])}`, `= ${grouped}`], check: st.choice('Grouped, it is:', [{ tex: grouped, ok: true }, { tex: `(A + B)x^{2} + (${lc([[-a, 'A'], [-a, 'B'], [1, 'C']])})x + ${eq0}`, msg: `$(${lin})^2$ has a middle term with a 2: $${-2 * a}x$.` }, { tex: `(A + B)x^{2} + (${lc([[-2 * a, 'A'], [-a, 'B']])})x + ${eq0}`, msg: 'Do not lose the $Cx$ term: it goes in the $x$ group.' }], 2), tag: 'sys-match' },
+      { title: 'Match coefficients: the system', think: 'Match each power of $x$ on both sides. A power missing on the left has coefficient 0.', lines: [`${Np.tex} = ${grouped}`, system], check: st.choice('So the system is:', [{ tex: system, ok: true }, { tex: sysTex([['A + B', n0], [eq1, n1], [eq0, n2]]), msg: 'Line up the powers: $x^2$ with $x^2$, plain numbers with plain numbers.' }, { tex: sysTex([['A + B', n2], [eq1, -n1 || 1], [eq0, n0]]), msg: `The $x$ coefficient on the left is $${n1}$.` }].filter((o, i, arr) => arr.findIndex((p) => p.tex === o.tex) === i), 2), tag: 'sys-match' },
+      { title: 'Start with the one-letter equation', think: a2 === 1 ? 'The plain-number equation has only $A$ in it, so it already tells you A.' : 'One equation has only $A$ in it. Solve that first.', lines: [a2 === 1 ? `A = ${n0}` : `${eq0} = ${n0} \\;\\Rightarrow\\; A = ${A}`], check: st.num('A =', A, { points: 1, answerTex: `${A}` }), tag: 'sys-chain' },
+      { title: 'Plug A in to get B', think: 'Put A into the $x^2$ equation, fully plugged in.', lines: [`(${A}) + B = ${n2} \\;\\Rightarrow\\; B = ${B}`], check: st.num('B =', B, { points: 1, answerTex: `${B}` }), tag: 'sys-chain' },
+      { title: 'Plug A and B in to get C', think: 'Now the $x$ equation has only one unknown left. Plug in BOTH values you know.', lines: [`${fill(-2 * a, A, true)}${fill(-a, B, false)} + C = ${n1}`, `${-2 * a * A - a * B} + C = ${n1} \\;\\Rightarrow\\; C = ${C}`], check: st.num('C =', C, { points: 2, answerTex: `${C}` }), tag: 'sys-chain' },
+      { title: 'Integrate each piece + C', think: 'Logs for $\\frac{A}{x}$ and $\\frac{B}{x - a}$. The squared piece uses the power rule: $\\int\\frac{C}{(x-a)^2}dx = -\\frac{C}{x - a}$.', lines: [`= ${ans.tex} + C`], check: st.final(3), tag: 'power' },
+    ],
+  };
+}
+
+const FAM = { distinct2, distinct3, repeated, irreducible, improper, split, divide_lin, rep_quad, sys_elim, sys_chain };
 M.PF_FAMILIES = FAM;
 const BY_LEVEL = {
-  1: [[distinct2, 5], [split, 2], [repeated, 2], [divide_lin, 2]],
-  2: [[distinct2, 2], [distinct3, 3], [repeated, 3], [improper, 2], [divide_lin, 1]],
-  3: [[irreducible, 4], [improper, 3], [repeated, 2], [distinct3, 1], [rep_quad, 3]],
+  1: [[distinct2, 5], [split, 2], [repeated, 2], [divide_lin, 2], [sys_elim, 2]],
+  2: [[distinct2, 2], [distinct3, 3], [repeated, 3], [improper, 2], [divide_lin, 1], [sys_elim, 2], [sys_chain, 2]],
+  3: [[irreducible, 4], [improper, 3], [repeated, 2], [distinct3, 1], [rep_quad, 3], [sys_chain, 2], [sys_elim, 1]],
 };
 M.GEN.pf = function (level, r, family) {
   const fam = family ? FAM[family] : r.pickW(BY_LEVEL[level] || BY_LEVEL[1]);

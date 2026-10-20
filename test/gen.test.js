@@ -63,6 +63,7 @@ for (const u of units) {
         if (c.kind === 'choice') {
           const oks = c.options.filter((o) => o.ok).length;
           if (oks !== 1) fail('choiceOk:' + key, s.title + ' oks=' + oks);
+          const shown = c.options.map((o) => o.tex || o.text); if (new Set(shown).size !== shown.length) fail('choiceDup:' + key, s.title + ' ' + JSON.stringify(shown));
           c.options.forEach((o) => { if (o.tex) texOK(o.tex, 'opt ' + key); if (o.text) richOK(o.text, 'optText ' + key); richOK(o.msg, 'optMsg ' + key); });
           richOK(c.prompt, 'prompt ' + key);
         } else if (c.kind === 'expr') {
